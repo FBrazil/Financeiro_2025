@@ -2,108 +2,101 @@
 using Infra.Configuracao;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Win32.SafeHandles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace Infra.Repositorio.Generics
+namespace Infra.Repositorio.Generics;
+
+public class RepositoryGenerics<T> : InterfaceGeneric<T>, IDisposable where T : class
 {
-    public class RepositoryGenerics<T> : InterfaceGeneric<T>, IDisposable where T : class
+    private readonly DbContextOptions<ContextBase> _OptionsBuilder;
+
+    //public RepositoryGenerics(DbContextOptions<ContextBase> optionsBuilder)
+    //{
+    //    _OptionsBuilder = optionsBuilder;
+    //}
+
+    public RepositoryGenerics()
     {
-        private readonly DbContextOptions<ContextBase> _OptionsBuilder;
+        _OptionsBuilder = new DbContextOptions<ContextBase>();
+    }
 
-        //public RepositoryGenerics(DbContextOptions<ContextBase> optionsBuilder)
-        //{
-        //    _OptionsBuilder = optionsBuilder;
-        //}
-
-        public RepositoryGenerics()
+    public async Task Add(T objeto)
+    {
+        using (var data = new ContextBase(_OptionsBuilder))
         {
-            _OptionsBuilder = new DbContextOptions<ContextBase>();
+            await data.Set<T>().AddAsync(objeto);
+            await data.SaveChangesAsync();
         }
+    }
 
-        public async Task Add(T objeto)
+    public async Task Delete(T objeto)
+    {
+        using (var data = new ContextBase(_OptionsBuilder))
         {
-            using (var data = new ContextBase(_OptionsBuilder))
-            {
-                await data.Set<T>().AddAsync(objeto);
-                await data.SaveChangesAsync();
-            }
+             data.Set<T>().Remove(objeto);
+            await data.SaveChangesAsync();
         }
+    }
 
-        public async Task Delete(T objeto)
+    public async Task<T> GetEntityById(int Id)
+    {
+
+        using (var data = new ContextBase(_OptionsBuilder))
         {
-            using (var data = new ContextBase(_OptionsBuilder))
-            {
-                 data.Set<T>().Remove(objeto);
-                await data.SaveChangesAsync();
-            }
+            return await data.Set<T>().FindAsync(Id);
         }
+    }
 
-        public async Task<T> GetEntityById(int Id)
+    public async Task<List<T>> List()
+    {
+        using (var data = new ContextBase(_OptionsBuilder))
         {
-
-            using (var data = new ContextBase(_OptionsBuilder))
-            {
-                return await data.Set<T>().FindAsync(Id);
-            }
-        }
-
-        public async Task<List<T>> List()
-        {
-            using (var data = new ContextBase(_OptionsBuilder))
-            {
-                return await data.Set<T>().ToListAsync();
-            }
-
-        }
-
-        public async Task Update(T objeto)
-        {
-            using (var data = new ContextBase(_OptionsBuilder))
-            {
-                 data.Set<T>().Update(objeto);
-                await data.SaveChangesAsync();
-            }
-        }
-
-
-
-
-        //Dispose
-        bool disposed = false;
-        SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
-        public void Dispose()
-        {
-            // Dispose of unmanaged resources.
-            Dispose(true);
-            // Suppress finalization.
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                handle.Dispose();
-                // Dispose managed state (managed objects).
-                // ...
-            }
-
-            // Free unmanaged resources.
-            // ...
-
-            disposed = true;
+            return await data.Set<T>().ToListAsync();
         }
 
     }
+
+    public async Task Update(T objeto)
+    {
+        using (var data = new ContextBase(_OptionsBuilder))
+        {
+             data.Set<T>().Update(objeto);
+            await data.SaveChangesAsync();
+        }
+    }
+
+
+
+
+    //Dispose
+    bool disposed = false;
+    SafeHandle handle = new SafeFileHandle(IntPtr.Zero, true);
+    public void Dispose()
+    {
+        // Dispose of unmanaged resources.
+        Dispose(true);
+        // Suppress finalization.
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            handle.Dispose();
+            // Dispose managed state (managed objects).
+            // ...
+        }
+
+        // Free unmanaged resources.
+        // ...
+
+        disposed = true;
+    }
+
 }
