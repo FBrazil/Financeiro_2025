@@ -1,3 +1,12 @@
+using Domain.Interfaces.Genereics;
+using Entities.Entidades;
+using Infra.Configuracao;
+using Infra.Repositorio.Generics;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using System;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -6,6 +15,16 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext<ContextBase>(
+    options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnections")));
+
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+                .AddEntityFrameworkStores<ContextBase>();
+
+//INTERFACE E REPOSITORIO
+builder.Services.AddSingleton(typeof(InterfaceGeneric<>), typeof(RepositoryGenerics<>));
+
 
 var app = builder.Build();
 
